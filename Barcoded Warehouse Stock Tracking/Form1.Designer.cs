@@ -21,6 +21,10 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.tabProducts = new System.Windows.Forms.TabPage();
             this.dgvProducts = new System.Windows.Forms.DataGridView();
             this.btnAdd = new System.Windows.Forms.Button();
+            this.btnPos = new System.Windows.Forms.Button();
+            this.btnReturns = new System.Windows.Forms.Button();
+            this.btnCustomers = new System.Windows.Forms.Button();
+            this.btnReports = new System.Windows.Forms.Button();
             this.txtPrice = new System.Windows.Forms.TextBox();
             this.txtName = new System.Windows.Forms.TextBox();
             this.txtBarcode = new System.Windows.Forms.TextBox();
@@ -53,7 +57,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(900, 550);
+            this.tabControl.Size = new System.Drawing.Size(969, 550);
             this.tabControl.TabIndex = 0;
             // 
             // tabProducts
@@ -61,6 +65,10 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.tabProducts.BackColor = System.Drawing.Color.Snow;
             this.tabProducts.Controls.Add(this.dgvProducts);
             this.tabProducts.Controls.Add(this.btnAdd);
+            this.tabProducts.Controls.Add(this.btnPos);
+            this.tabProducts.Controls.Add(this.btnReturns);
+            this.tabProducts.Controls.Add(this.btnCustomers);
+            this.tabProducts.Controls.Add(this.btnReports);
             this.tabProducts.Controls.Add(this.txtPrice);
             this.tabProducts.Controls.Add(this.txtName);
             this.tabProducts.Controls.Add(this.txtBarcode);
@@ -70,7 +78,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.tabProducts.Location = new System.Drawing.Point(4, 29);
             this.tabProducts.Name = "tabProducts";
             this.tabProducts.Padding = new System.Windows.Forms.Padding(12);
-            this.tabProducts.Size = new System.Drawing.Size(892, 517);
+            this.tabProducts.Size = new System.Drawing.Size(961, 517);
             this.tabProducts.TabIndex = 0;
             this.tabProducts.Text = "Ürünler";
             // 
@@ -82,7 +90,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.dgvProducts.Location = new System.Drawing.Point(16, 155);
             this.dgvProducts.Name = "dgvProducts";
             this.dgvProducts.ReadOnly = true;
-            this.dgvProducts.Size = new System.Drawing.Size(860, 355);
+            this.dgvProducts.Size = new System.Drawing.Size(930, 355);
             this.dgvProducts.TabIndex = 7;
             // 
             // btnAdd
@@ -95,6 +103,46 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.btnAdd.Text = "Ürünü Kaydet";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnPos
+            // 
+            this.btnPos.Font = new System.Drawing.Font("Malgun Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnPos.Location = new System.Drawing.Point(320, 110);
+            this.btnPos.Name = "btnPos";
+            this.btnPos.Size = new System.Drawing.Size(200, 30);
+            this.btnPos.TabIndex = 8;
+            this.btnPos.Text = "POS / Satış";
+            this.btnPos.UseVisualStyleBackColor = true;
+            // 
+            // btnReturns
+            // 
+            this.btnReturns.Font = new System.Drawing.Font("Malgun Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnReturns.Location = new System.Drawing.Point(540, 110);
+            this.btnReturns.Name = "btnReturns";
+            this.btnReturns.Size = new System.Drawing.Size(200, 30);
+            this.btnReturns.TabIndex = 9;
+            this.btnReturns.Text = "İade / İptal";
+            this.btnReturns.UseVisualStyleBackColor = true;
+            // 
+            // btnCustomers
+            // 
+            this.btnCustomers.Font = new System.Drawing.Font("Malgun Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCustomers.Location = new System.Drawing.Point(320, 155);
+            this.btnCustomers.Name = "btnCustomers";
+            this.btnCustomers.Size = new System.Drawing.Size(200, 30);
+            this.btnCustomers.TabIndex = 10;
+            this.btnCustomers.Text = "Müşteriler / Cari";
+            this.btnCustomers.UseVisualStyleBackColor = true;
+            // 
+            // btnReports
+            // 
+            this.btnReports.Font = new System.Drawing.Font("Malgun Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnReports.Location = new System.Drawing.Point(540, 155);
+            this.btnReports.Name = "btnReports";
+            this.btnReports.Size = new System.Drawing.Size(200, 30);
+            this.btnReports.TabIndex = 11;
+            this.btnReports.Text = "Raporlar / Yedek";
+            this.btnReports.UseVisualStyleBackColor = true;
             // 
             // txtPrice
             // 
@@ -161,7 +209,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.tabMovements.Location = new System.Drawing.Point(4, 29);
             this.tabMovements.Name = "tabMovements";
             this.tabMovements.Padding = new System.Windows.Forms.Padding(12);
-            this.tabMovements.Size = new System.Drawing.Size(892, 517);
+            this.tabMovements.Size = new System.Drawing.Size(961, 517);
             this.tabMovements.TabIndex = 1;
             this.tabMovements.Text = "Stok Hareketleri";
             // 
@@ -176,7 +224,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             this.dgvMovements.Location = new System.Drawing.Point(16, 155);
             this.dgvMovements.Name = "dgvMovements";
             this.dgvMovements.ReadOnly = true;
-            this.dgvMovements.Size = new System.Drawing.Size(860, 348);
+            this.dgvMovements.Size = new System.Drawing.Size(930, 348);
             this.dgvMovements.TabIndex = 7;
             // 
             // btnAddMovement
@@ -268,7 +316,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(900, 550);
+            this.ClientSize = new System.Drawing.Size(969, 550);
             this.Controls.Add(this.tabControl);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -292,6 +340,10 @@ namespace Barcoded_Warehouse_Stock_Tracking
         private System.Windows.Forms.TabPage tabProducts;
         private System.Windows.Forms.DataGridView dgvProducts;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Button btnPos;
+        private System.Windows.Forms.Button btnReturns;
+        private System.Windows.Forms.Button btnCustomers;
+        private System.Windows.Forms.Button btnReports;
         private System.Windows.Forms.TextBox txtPrice;
         private System.Windows.Forms.TextBox txtName;
         private System.Windows.Forms.TextBox txtBarcode;
