@@ -1,76 +1,115 @@
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
-using System.Globalization;
-using System.Linq;
 using System.Windows.Forms;
+using System.Data;
+using Guna.UI2.WinForms;
 
 namespace Barcoded_Warehouse_Stock_Tracking
 {
     public class FrmReturns : Form
     {
-        private readonly TextBox _txtSaleNo = new TextBox();
-        private readonly Button _btnLoad = new Button();
-        private readonly DataGridView _grid = new DataGridView();
-        private readonly Button _btnReturn = new Button();
+        private static readonly Color BgDark = Color.FromArgb(26, 26, 46);
+        private static readonly Color BgMid = Color.FromArgb(22, 33, 62);
+        private static readonly Color BgInput = Color.FromArgb(35, 45, 78);
+        private static readonly Color Accent = Color.FromArgb(233, 69, 96);
+        private static readonly Color AccentBlu = Color.FromArgb(52, 152, 219);
+        private static readonly Color AccentOrg = Color.FromArgb(230, 126, 34);
+        private static readonly Color TextMain = Color.FromArgb(234, 234, 234);
+        private static readonly Color TextDim = Color.FromArgb(140, 140, 160);
+
+        private readonly Guna2TextBox _txtSaleNo = new Guna2TextBox();
+        private readonly Guna2Button _btnLoad = new Guna2Button();
+        private readonly Guna2DataGridView _grid = new Guna2DataGridView();
+        private readonly Guna2Button _btnReturn = new Guna2Button();
         private DataTable _dt;
 
         public FrmReturns()
         {
-            Text = "İade / İptal";
+            Text = "Poseidon Yazılım — İade / İptal";
             StartPosition = FormStartPosition.CenterScreen;
-            Width = 980;
-            Height = 650;
+            Width = 1000; Height = 700;
+            BackColor = BgDark;
 
-            var top = new Panel { Dock = DockStyle.Top, Height = 70, Padding = new Padding(12) };
-            var bottom = new Panel { Dock = DockStyle.Bottom, Height = 70, Padding = new Padding(12) };
-            var center = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
+            // ── TOP PANEL (Search) ──────────────────────────────────────────────
+            var top = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = BgMid, Padding = new Padding(20) };
 
-            var lbl = new Label { Text = "Fiş / Satış No", AutoSize = true, Location = new Point(12, 10) };
-            _txtSaleNo.Location = new Point(12, 30);
-            _txtSaleNo.Width = 360;
+            var lblHead = new Label
+            {
+                Text = "↩  İade / İptal İşlemi",
+                ForeColor = Accent, Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                AutoSize = true, Location = new Point(25, 20)
+            };
 
-            _btnLoad.Text = "Satışı Bul";
-            _btnLoad.Location = new Point(390, 28);
-            _btnLoad.Size = new Size(120, 30);
+            var lblFis = new Label { Text = "Sorgulanacak Fiş / Satış No", ForeColor = TextDim, AutoSize = true, Location = new Point(25, 65), Font = new Font("Segoe UI", 9) };
+
+            _txtSaleNo.Location = new Point(25, 78);
+            _txtSaleNo.Width = 320; _txtSaleNo.Height = 38;
+            _txtSaleNo.PlaceholderText = "🔍 Fiş No Yazın...";
+            _txtSaleNo.BorderRadius = 8; _txtSaleNo.Font = new Font("Segoe UI", 10);
+            _txtSaleNo.FillColor = BgInput; _txtSaleNo.BorderColor = AccentBlu;
+            _txtSaleNo.ForeColor = TextMain; _txtSaleNo.PlaceholderForeColor = TextDim;
+            _txtSaleNo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; LoadSale(); } };
+
+            _btnLoad.Text = "SATIŞI BUL";
+            _btnLoad.Location = new Point(355, 88); _btnLoad.Size = new Size(130, 38);
+            _btnLoad.BorderRadius = 8; _btnLoad.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+            _btnLoad.FillColor = AccentBlu; _btnLoad.ForeColor = Color.White;
             _btnLoad.Click += (_, __) => LoadSale();
 
-            top.Controls.Add(lbl);
+            top.Controls.Add(lblHead);
+            top.Controls.Add(lblFis);
             top.Controls.Add(_txtSaleNo);
             top.Controls.Add(_btnLoad);
 
+            // ── CENTER (Grid) ───────────────────────────────────────────────────
+            var center = new Panel { Dock = DockStyle.Fill, BackColor = BgDark, Padding = new Padding(15) };
             _grid.Dock = DockStyle.Fill;
             _grid.AllowUserToAddRows = false;
-            _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _grid.MultiSelect = false;
-            _grid.AutoGenerateColumns = false;
+            _grid.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Dark;
+            _grid.ThemeStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(22, 33, 62);
+            _grid.ThemeStyle.HeaderStyle.ForeColor = Accent;
+            _grid.BorderStyle = BorderStyle.None;
+            _grid.RowHeadersVisible = false;
 
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Barcode", HeaderText = "Barkod", Width = 140, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Ürün", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "UnitPrice", HeaderText = "Fiyat", Width = 90, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "SoldQty", HeaderText = "Satılan", Width = 70, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ReturnedQty", HeaderText = "İade", Width = 70, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ReturnQty", HeaderText = "İade Adet", Width = 90, ReadOnly = false });
+            // --- Modern Styling ---
+            _grid.RowTemplate.Height = 35;
+            _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            _grid.GridColor = Color.FromArgb(40, 55, 90);
+            _grid.ColumnHeadersHeight = 40;
+            _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            _grid.DefaultCellStyle.SelectionForeColor = Color.White;
+
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Barcode",    HeaderText = "Barkod",     Width = 150, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name",       HeaderText = "Ürün",       AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "UnitPrice",  HeaderText = "Fiyat",      Width = 100, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "SoldQty",    HeaderText = "Satılan",    Width = 80, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ReturnedQty",HeaderText = "İade Edilen",Width = 100, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ReturnQty",  HeaderText = "İade Adet",  Width = 100, ReadOnly = false });
 
             center.Controls.Add(_grid);
 
-            _btnReturn.Text = "İadeyi Kaydet (Stok Geri Al)";
-            _btnReturn.Dock = DockStyle.Right;
-            _btnReturn.Width = 260;
-            _btnReturn.Click += (_, __) => SaveReturn();
+            // ── BOTTOM PANEL (Action) ──────────────────────────────────────────
+            var bottom = new Panel { Dock = DockStyle.Bottom, Height = 90, BackColor = BgMid, Padding = new Padding(20) };
 
             var info = new Label
             {
-                Text = "Not: Sadece 'Completed' satışlardan iade yapılır. Kısmi iade desteklenir.",
-                AutoSize = true,
-                ForeColor = Color.DimGray,
-                Dock = DockStyle.Left,
-                TextAlign = ContentAlignment.MiddleLeft
+                Text = "ℹ  Sadece 'Completed' satışlardan iade yapılır. Kısmi iade desteklenir.",
+                ForeColor = TextDim, Font = new Font("Segoe UI", 9, FontStyle.Italic),
+                AutoSize = true, Location = new Point(20, 35)
             };
 
-            bottom.Controls.Add(_btnReturn);
+            _btnReturn.Text = "↩  İadeyi Kaydet (Stok Geri Al)";
+            _btnReturn.Location = new Point(680, 20); _btnReturn.Size = new Size(280, 50);
+            _btnReturn.BorderRadius = 12; _btnReturn.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            _btnReturn.FillColor = AccentOrg; _btnReturn.ForeColor = Color.White;
+            _btnReturn.Click += (_, __) => SaveReturn();
+
             bottom.Controls.Add(info);
+            bottom.Controls.Add(_btnReturn);
 
             Controls.Add(center);
             Controls.Add(bottom);
@@ -80,91 +119,41 @@ namespace Barcoded_Warehouse_Stock_Tracking
         private void LoadSale()
         {
             var saleNo = _txtSaleNo.Text.Trim();
-            if (string.IsNullOrWhiteSpace(saleNo))
-            {
-                MessageBox.Show("Satış no zorunludur.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
+            if (string.IsNullOrEmpty(saleNo)) return;
             _dt = Database.GetSaleItemsForReturn(saleNo);
-            if (_dt.Rows.Count == 0)
-            {
-                MessageBox.Show("Satış bulunamadı veya iade edilemez (status Completed olmalı).", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                _grid.DataSource = null;
-                return;
-            }
-
-            if (!_dt.Columns.Contains("ReturnQty"))
-            {
-                _dt.Columns.Add("ReturnQty", typeof(int));
-            }
-
-            foreach (DataRow row in _dt.Rows)
-            {
-                row["ReturnQty"] = 0;
-            }
-
+            if (_dt.Rows.Count == 0) { MessageBox.Show("Satış bulunamadı!"); return; }
+            if (!_dt.Columns.Contains("ReturnQty")) _dt.Columns.Add("ReturnQty", typeof(int));
+            foreach (DataRow r in _dt.Rows) r["ReturnQty"] = 0;
             _grid.DataSource = _dt;
         }
 
         private void SaveReturn()
         {
-            if (_dt == null || _dt.Rows.Count == 0)
-            {
-                MessageBox.Show("Önce satış yükleyin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var saleNo = _txtSaleNo.Text.Trim();
-
-            var items = new List<Database.ReturnItemInput>();
-            foreach (DataRow row in _dt.Rows)
-            {
-                int sold = Convert.ToInt32(row["SoldQty"]);
-                int returned = Convert.ToInt32(row["ReturnedQty"]);
-                int max = sold - returned;
-                int qty = 0;
-
-                if (row["ReturnQty"] != DBNull.Value)
-                {
-                    qty = Convert.ToInt32(row["ReturnQty"]);
-                }
-
-                if (qty <= 0) continue;
-                if (qty > max)
-                {
-                    MessageBox.Show("İade adedi satılan-adet(geri kalan) değerini aşamaz.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                items.Add(new Database.ReturnItemInput
-                {
-                    SaleItemId = Convert.ToInt64(row["SaleItemId"]),
-                    ProductId = Convert.ToInt64(row["ProductId"]),
-                    BarcodeSnapshot = Convert.ToString(row["Barcode"]),
-                    Quantity = qty,
-                    UnitPrice = Convert.ToDouble(row["UnitPrice"], CultureInfo.InvariantCulture)
-                });
-            }
-
-            if (items.Count == 0)
-            {
-                MessageBox.Show("İade edilecek adet girin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var returnNo = DateTime.Now.ToString("yyyyMMddHHmmss") + "-R-" + Guid.NewGuid().ToString("N").Substring(0, 4);
+            if (_dt == null || _grid.Rows.Count == 0) return;
             try
             {
-                Database.CreateReturn(saleNo, returnNo, items, Session.UserId ?? 0);
-                MessageBox.Show($"İade kaydedildi.\nİade No: {returnNo}", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                var items = new System.Collections.Generic.List<Database.ReturnItemInput>();
+                foreach (DataRow row in _dt.Rows)
+                {
+                    int rq = Convert.ToInt32(row["ReturnQty"]);
+                    if (rq > 0)
+                    {
+                        items.Add(new Database.ReturnItemInput
+                        {
+                            SaleItemId = Convert.ToInt64(row["SaleItemId"]),
+                            ProductId = Convert.ToInt64(row["ProductId"]),
+                            BarcodeSnapshot = row["Barcode"].ToString(),
+                            Quantity = rq,
+                            UnitPrice = Convert.ToDouble(row["UnitPrice"])
+                        });
+                    }
+                }
+                if (items.Count == 0) return;
+                Database.CreateReturn(_txtSaleNo.Text.Trim(), "RET" + DateTime.Now.Ticks, items, Session.UserId ?? 0);
+                MessageBox.Show("İade işlemi tamamlandı.");
                 LoadSale();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "İade Hatası", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
     }
 }
-

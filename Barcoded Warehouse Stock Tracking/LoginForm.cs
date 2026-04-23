@@ -2,8 +2,6 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
-using Barcoded_Warehouse_Stock_Tracking.Business;
-using Barcoded_Warehouse_Stock_Tracking.DataAccess;
 
 namespace Barcoded_Warehouse_Stock_Tracking
 {
@@ -16,127 +14,165 @@ namespace Barcoded_Warehouse_Stock_Tracking
 
         public LoginForm()
         {
-            using (var ctx = new WarehouseContext())
-            {
-                if (!System.Linq.Enumerable.Any(ctx.Users))
-                {
-                    ctx.Users.Add(new Entities.User
-                    {
-                        Username = "admin",
-                        PasswordHash = Security.HashPassword("1234"),
-                        Role = "Admin",
-                        IsActive = 1
-                    });
-                    try { ctx.SaveChanges(); } catch { }
-                }
-            }
-
-            Text = "Giriş - Depo Stok Takip";
+            // --- Form Ayarları ---
+            Text = "Poseidon Yazılım - Giriş";
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
-            MinimizeBox = false;
-            ClientSize = new Size(400, 300);
-            BackColor = Color.White;
+            ClientSize = new Size(460, 620);
+            BackColor = Color.FromArgb(26, 26, 46);
 
-            var lblTitle = new Label { Text = "Sisteme Giriş Yapın", AutoSize = true, Location = new Point(40, 20), Font = new Font("Segoe UI", 16, FontStyle.Bold) };
-            
-            _txtUser.Location = new Point(40, 70);
-            _txtUser.Width = 300;
-            _txtUser.Height = 40;
+            // --- Başlık Grubu ---
+            var lblBrand = new Label
+            {
+                Text = "Poseidon Yazılım",
+                ForeColor = Color.FromArgb(233, 69, 96),
+                Font = new Font("Segoe UI", 24, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(460, 50),
+                Location = new Point(0, 40)
+            };
+
+            var lblSub = new Label
+            {
+                Text = "Depo & Stok Yönetim Sistemi",
+                ForeColor = Color.FromArgb(180, 180, 200),
+                Font = new Font("Segoe UI", 10),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(460, 25),
+                Location = new Point(0, 90)
+            };
+
+            // --- KART PANELİ (Ana Taşıyıcı) ---
+            var card = new Guna2Panel
+            {
+                Size = new Size(380, 420),
+                Location = new Point(40, 130),
+                FillColor = Color.FromArgb(22, 33, 62),
+                BorderRadius = 20,
+                ShadowDecoration = {
+                    Enabled = true,
+                    Color = Color.FromArgb(233, 69, 96),
+                    Depth = 15,
+                    BorderRadius = 20
+                }
+            };
+
+            // --- HİZALAMA AYARLARI (Matematiksel Orta) ---
+            int cardW = card.Width;    // 380
+            int ctrlW = 300;           // İçerideki kutuların genişliği (Taşmaması için biraz daralttık)
+            int xPos = (cardW - ctrlW) / 2; // (380 - 300) / 2 = 40 (Tam orta)
+
+            var lblTitle = new Label
+            {
+                Text = "Hesabınıza Giriş Yapın",
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(ctrlW, 40),
+                Location = new Point(xPos, 30)
+            };
+
+            // --- Kullanıcı Adı ---
+            _txtUser.Size = new Size(ctrlW, 50);
+            _txtUser.Location = new Point(xPos, 100);
             _txtUser.PlaceholderText = "Kullanıcı Adı";
-            _txtUser.BorderRadius = 8;
-            _txtUser.Font = new Font("Segoe UI", 10);
+            _txtUser.BorderRadius = 10;
+            _txtUser.FillColor = Color.FromArgb(35, 45, 78);
+            _txtUser.BorderColor = Color.FromArgb(60, 80, 120);
+            _txtUser.ForeColor = Color.White;
+            _txtUser.TextOffset = new Point(10, 0);
 
-            _txtPass.Location = new Point(40, 130);
-            _txtPass.Width = 300;
-            _txtPass.Height = 40;
+            // --- Şifre ---
+            _txtPass.Size = new Size(ctrlW, 50);
+            _txtPass.Location = new Point(xPos, 165); // Üst kutudan 15px boşluk
             _txtPass.PlaceholderText = "Şifre";
             _txtPass.UseSystemPasswordChar = true;
-            _txtPass.BorderRadius = 8;
-            _txtPass.Font = new Font("Segoe UI", 10);
+            _txtPass.BorderRadius = 10;
+            _txtPass.FillColor = Color.FromArgb(35, 45, 78);
+            _txtPass.BorderColor = Color.FromArgb(60, 80, 120);
+            _txtPass.ForeColor = Color.White;
+            _txtPass.TextOffset = new Point(10, 0);
 
-            _btnLogin.Text = "GİRİŞ YAP";
-            _btnLogin.Location = new Point(40, 190);
-            _btnLogin.Width = 300;
-            _btnLogin.Height = 45;
-            _btnLogin.BorderRadius = 8;
+            // --- Giriş Butonu ---
+            _btnLogin.Text = "SİSTEME GİRİŞ YAP";
+            _btnLogin.Size = new Size(ctrlW, 55);
+            _btnLogin.Location = new Point(xPos, 260); // Buton ile kutular arası mesafe
+            _btnLogin.BorderRadius = 12;
+            _btnLogin.FillColor = Color.FromArgb(233, 69, 96);
             _btnLogin.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            _btnLogin.Cursor = Cursors.Hand;
             _btnLogin.Click += (_, __) => DoLogin();
 
-            _lblError.ForeColor = Color.DarkRed;
-            _lblError.AutoSize = false;
+            // --- Hata Mesajı ---
+            _lblError.Size = new Size(ctrlW, 25);
+            _lblError.Location = new Point(xPos, 330);
+            _lblError.ForeColor = Color.FromArgb(233, 69, 96);
             _lblError.TextAlign = ContentAlignment.MiddleCenter;
-            _lblError.Location = new Point(40, 245);
-            _lblError.Size = new Size(300, 25);
-            _lblError.Font = new Font("Segoe UI", 9);
+            _lblError.Text = "";
 
-            Controls.Add(lblTitle);
-            Controls.Add(_txtUser);
-            Controls.Add(_txtPass);
-            Controls.Add(_btnLogin);
-            Controls.Add(_lblError);
+            // Kontrolleri Kartın İçine Ekle
+            card.Controls.Add(lblTitle);
+            card.Controls.Add(_txtUser);
+            card.Controls.Add(_txtPass);
+            card.Controls.Add(_btnLogin);
+            card.Controls.Add(_lblError);
+
+            // Sayfa Alt Yazısı
+            var lblFooter = new Label
+            {
+                Text = "© 2025 Poseidon Yazılım",
+                ForeColor = Color.FromArgb(100, 100, 130),
+                Font = new Font("Segoe UI", 8),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(460, 20),
+                Location = new Point(0, 565)
+            };
+
+            // Ana Forma Ekle
+            Controls.Add(lblBrand);
+            Controls.Add(lblSub);
+            Controls.Add(card);
+            Controls.Add(lblFooter);
 
             AcceptButton = _btnLogin;
         }
 
         private void DoLogin()
         {
-            _lblError.Text = "";
-            var username = _txtUser.Text.Trim();
-            var password = _txtPass.Text;
+            var user = _txtUser.Text.Trim();
+            var pass = _txtPass.Text;
 
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
             {
-                _lblError.Text = "Kullanıcı adı ve şifre zorunludur.";
+                _lblError.Text = "Lütfen tüm alanları doldurun.";
                 return;
             }
 
-            using (var ctx = new WarehouseContext()) 
+            try
             {
-                try
+                var result = Database.AuthenticateUser(user, pass);
+                if (result.HasValue)
                 {
-                    var authService = new AuthService(ctx);
-                    var user = authService.Authenticate(username, password);
+                    Session.UserId = result.Value.Id;
+                    Session.Username = user;
+                    Session.Role = result.Value.Role;
 
-                    if (user == null)
-                    {
-                        _lblError.Text = "Kullanıcı adı veya şifre hatalı.";
-                        return;
-                    }
-
-                    Session.UserId = user.Id;
-                    Session.Username = user.Username;
-                    Session.Role = user.Role;
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
                 }
-                catch (Exception ex)
+                else
                 {
-                    _lblError.Text = "Veritabanı hatası: " + ex.Message;
-                    return;
+                    _lblError.Text = "Kullanıcı adı veya şifre hatalı!";
+                    _txtPass.Clear();
+                    _txtPass.Focus();
                 }
             }
-
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            // 
-            // LoginForm
-            // 
-            this.ClientSize = new System.Drawing.Size(284, 261);
-            this.Name = "LoginForm";
-            this.Load += new System.EventHandler(this.LoginForm_Load);
-            this.ResumeLayout(false);
-
-        }
-
-        private void LoginForm_Load(object sender, EventArgs e)
-        {
-
+            catch (Exception ex)
+            {
+                _lblError.Text = "Giriş sırasında hata oluştu.";
+                MessageBox.Show(ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
-

@@ -167,6 +167,58 @@ CREATE TABLE IF NOT EXISTS SaleReturnItems (
 ";
                     cmd.ExecuteNonQuery();
                 }
+
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT COUNT(1) FROM Users WHERE Username = 'admin'";
+                    long adminCount = Convert.ToInt64(cmd.ExecuteScalar() ?? 0L);
+                    var hash = Security.HashPassword("1234");
+                    if (adminCount == 0)
+                    {
+                        using (var ins = conn.CreateCommand())
+                        {
+                            ins.CommandText = "INSERT INTO Users(Username, PasswordHash, Role, CreatedAt) VALUES('admin', @h, 'Admin', @dt)";
+                            ins.Parameters.AddWithValue("@h", hash);
+                            ins.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
+                            ins.ExecuteNonQuery();
+                        }
+                    }
+                    else
+                    {
+                        using (var upd = conn.CreateCommand())
+                        {
+                            upd.CommandText = "UPDATE Users SET PasswordHash = @h WHERE Username = 'admin'";
+                            upd.Parameters.AddWithValue("@h", hash);
+                            upd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+        }
+
+        public static (long Id, string Role)? AuthenticateUser(string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return null;
+            using (var conn = GetConnection())
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT Id, PasswordHash, Role FROM Users WHERE LOWER(Username) = LOWER(@u) AND IsActive = 1";
+                    cmd.Parameters.AddWithValue("@u", username);
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (!r.Read()) return null;
+                        long id = r.GetInt64(0);
+                        string hash = r.GetString(1);
+                        string role = r.GetString(2);
+                        if (Security.VerifyPassword(password, hash))
+                        {
+                            return (id, role);
+                        }
+                        return null;
+                    }
+                }
             }
         }
 
@@ -385,7 +437,7 @@ SELECT last_insert_rowid();";
                         cmd.Parameters.AddWithValue("@sub", subtotal);
                         cmd.Parameters.AddWithValue("@disc", discountTotal);
                         cmd.Parameters.AddWithValue("@grand", grandTotal);
-                        cmd.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                        cmd.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                         cmd.Parameters.AddWithValue("@uid", createdByUserId);
                         saleId = (long)(cmd.ExecuteScalar() ?? 0L);
                     }
@@ -442,7 +494,7 @@ VALUES(@pid, @b, @q, 'Çıkış', 'Sale', 'Sale', @rid, @dt, @uid);";
                             cmdMv.Parameters.AddWithValue("@b", it.BarcodeSnapshot);
                             cmdMv.Parameters.AddWithValue("@q", -it.Quantity);
                             cmdMv.Parameters.AddWithValue("@rid", saleId);
-                            cmdMv.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                            cmdMv.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                             cmdMv.Parameters.AddWithValue("@uid", createdByUserId);
                             cmdMv.ExecuteNonQuery();
                         }
@@ -458,7 +510,7 @@ VALUES(@pid, @b, @q, 'Çıkış', 'Sale', 'Sale', @rid, @dt, @uid);";
                             cmdPay.Parameters.AddWithValue("@sid", saleId);
                             cmdPay.Parameters.AddWithValue("@m", p.Method);
                             cmdPay.Parameters.AddWithValue("@a", p.Amount);
-                            cmdPay.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                            cmdPay.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                             cmdPay.ExecuteNonQuery();
                         }
                     }
@@ -488,7 +540,7 @@ VALUES(@pid, @b, @q, 'Çıkış', 'Sale', 'Sale', @rid, @dt, @uid);";
                 cmd.Parameters.AddWithValue("@t", refType);
                 cmd.Parameters.AddWithValue("@r", refId);
                 cmd.Parameters.AddWithValue("@a", amount);
-                cmd.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                cmd.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                 cmd.ExecuteNonQuery();
             }
 
@@ -531,7 +583,7 @@ SELECT last_insert_rowid();";
                 cmd.Parameters.AddWithValue("@n", name);
                 cmd.Parameters.AddWithValue("@p", string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone);
                 cmd.Parameters.AddWithValue("@e", string.IsNullOrWhiteSpace(email) ? (object)DBNull.Value : email);
-                cmd.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                cmd.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                 return (long)(cmd.ExecuteScalar() ?? 0L);
             }
         }
@@ -556,7 +608,7 @@ SELECT last_insert_rowid();";
                         cmd.Parameters.AddWithValue("@c", customerId);
                         cmd.Parameters.AddWithValue("@m", method);
                         cmd.Parameters.AddWithValue("@a", amount);
-                        cmd.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                        cmd.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                         cmd.Parameters.AddWithValue("@u", createdByUserId);
                         collectionId = (long)(cmd.ExecuteScalar() ?? 0L);
                     }
@@ -681,7 +733,7 @@ SELECT last_insert_rowid();";
                         cmd.Parameters.AddWithValue("@sid", saleId);
                         cmd.Parameters.AddWithValue("@no", returnNo);
                         cmd.Parameters.AddWithValue("@tot", total);
-                        cmd.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                        cmd.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                         cmd.Parameters.AddWithValue("@uid", createdByUserId);
                         returnId = (long)(cmd.ExecuteScalar() ?? 0L);
                     }
@@ -722,7 +774,7 @@ VALUES(@pid, @b, @q, 'Giriş', 'Return', 'Return', @ref, @dt, @uid);";
                             cmdMv.Parameters.AddWithValue("@b", it.BarcodeSnapshot);
                             cmdMv.Parameters.AddWithValue("@q", it.Quantity);
                             cmdMv.Parameters.AddWithValue("@ref", returnId);
-                            cmdMv.Parameters.AddWithValue("@dt", DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
+                            cmdMv.Parameters.AddWithValue("@dt", DateTime.Now.ToString("s", CultureInfo.InvariantCulture));
                             cmdMv.Parameters.AddWithValue("@uid", createdByUserId);
                             cmdMv.ExecuteNonQuery();
                         }

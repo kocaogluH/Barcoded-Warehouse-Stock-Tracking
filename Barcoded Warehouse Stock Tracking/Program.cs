@@ -26,7 +26,18 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 AppDomain.CurrentDomain.SetData("DataDirectory", appDir);
 
                 Database.EnsureDatabase();
-                Application.Run(new Form1());
+                
+                using (var loginForm = new LoginForm())
+                {
+                    if (loginForm.ShowDialog() == DialogResult.OK)
+                    {
+                        Application.Run(new Form1());
+                    }
+                    else
+                    {
+                        Application.Exit();
+                    }
+                }
             }
             catch (Exception ex)
             {
