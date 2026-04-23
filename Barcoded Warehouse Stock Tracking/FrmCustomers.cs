@@ -1,156 +1,231 @@
 using System;
-using System.Data;
 using System.Drawing;
-using System.Globalization;
 using System.Windows.Forms;
+using System.Data;
+using Guna.UI2.WinForms;
 
 namespace Barcoded_Warehouse_Stock_Tracking
 {
     public class FrmCustomers : Form
     {
-        private readonly DataGridView _grid = new DataGridView();
-        private readonly TextBox _txtName = new TextBox();
-        private readonly TextBox _txtPhone = new TextBox();
-        private readonly TextBox _txtEmail = new TextBox();
-        private readonly Button _btnAdd = new Button();
+        private static readonly Color BgDark = Color.FromArgb(26, 26, 46);
+        private static readonly Color BgMid = Color.FromArgb(22, 33, 62);
+        private static readonly Color BgInput = Color.FromArgb(35, 45, 78);
+        private static readonly Color Accent = Color.FromArgb(233, 69, 96);
+        private static readonly Color AccentBlu = Color.FromArgb(52, 152, 219);
+        private static readonly Color AccentGrn = Color.FromArgb(46, 204, 113);
+        private static readonly Color TextMain = Color.FromArgb(234, 234, 234);
+        private static readonly Color TextDim = Color.FromArgb(140, 140, 160);
 
-        private readonly ComboBox _cmbCustomer = new ComboBox();
-        private readonly TextBox _txtAmount = new TextBox();
-        private readonly ComboBox _cmbMethod = new ComboBox();
-        private readonly Button _btnCollect = new Button();
+        private readonly Guna2TextBox _txtName = new Guna2TextBox();
+        private readonly Guna2TextBox _txtPhone = new Guna2TextBox();
+        private readonly Guna2TextBox _txtEmail = new Guna2TextBox();
+        private readonly Guna2Button _btnAdd = new Guna2Button();
+        private readonly Guna2ComboBox _cmbCustomer = new Guna2ComboBox();
+        private readonly Guna2ComboBox _cmbMethod = new Guna2ComboBox();
+        private readonly Guna2TextBox _txtAmount = new Guna2TextBox();
+        private readonly Guna2Button _btnCollect = new Guna2Button();
+        private readonly Guna2DataGridView _grid = new Guna2DataGridView();
 
-        private DataTable _dt;
+        // Yardımcı: input stilini uygula
+        private void StyleTxt(Guna2TextBox tb, string ph, Color border)
+        {
+            tb.Dock = DockStyle.Top;
+            tb.Height = 42;
+            tb.PlaceholderText = ph;
+            tb.BorderRadius = 8;
+            tb.Font = new Font("Segoe UI", 10);
+            tb.FillColor = BgInput;
+            tb.BorderColor = border;
+            tb.ForeColor = TextMain;
+            tb.PlaceholderForeColor = TextDim;
+            tb.Margin = new Padding(0, 0, 0, 10);
+        }
 
         public FrmCustomers()
         {
-            Text = "Müşteriler / Cari";
+            Text = "Poseidon Yazılım — Müşteriler / Cari";
             StartPosition = FormStartPosition.CenterScreen;
-            Width = 980;
-            Height = 650;
+            Width = 1020; Height = 620;
+            BackColor = BgDark;
 
-            var left = new Panel { Dock = DockStyle.Left, Width = 420, Padding = new Padding(12) };
-            var right = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
+            // ── SOL PANEL ────────────────────────────────────────────────────────
+            var left = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 400,
+                BackColor = BgMid,
+                Padding = new Padding(25, 20, 25, 20)
+            };
 
-            var lblAdd = new Label { Text = "Yeni Müşteri", AutoSize = true, Font = new Font(FontFamily.GenericSansSerif, 10, FontStyle.Bold) };
-            var lblName = new Label { Text = "Ad Soyad", AutoSize = true, Location = new Point(12, 40) };
-            _txtName.Location = new Point(12, 60);
-            _txtName.Width = 380;
-            var lblPhone = new Label { Text = "Telefon", AutoSize = true, Location = new Point(12, 95) };
-            _txtPhone.Location = new Point(12, 115);
-            _txtPhone.Width = 380;
-            var lblEmail = new Label { Text = "E-posta", AutoSize = true, Location = new Point(12, 150) };
-            _txtEmail.Location = new Point(12, 170);
-            _txtEmail.Width = 380;
+            // TableLayoutPanel ile sol paneli dikey olarak düzenle
+            var tlp = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 12,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0)
+            };
+            tlp.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            _btnAdd.Text = "Müşteri Ekle";
-            _btnAdd.Location = new Point(12, 210);
-            _btnAdd.Size = new Size(380, 32);
+            // Sabit yükseklikler
+            int[] rowHeights = { 35, 52, 52, 52, 52, 20, 35, 52, 52, 52, 20, 20 };
+            foreach (var h in rowHeights)
+                tlp.RowStyles.Add(new RowStyle(SizeType.Absolute, h));
+
+            // Başlık 1
+            var lblSec1 = new Label
+            {
+                Text = "👤  Yeni Müşteri Ekle",
+                ForeColor = Accent,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            // Input'lar
+            StyleTxt(_txtName, "Ad Soyad *", Accent);
+            StyleTxt(_txtPhone, "Telefon", Accent);
+            StyleTxt(_txtEmail, "E-posta", Accent);
+
+            // Müşteri Ekle butonu
+            _btnAdd.Text = "＋  Müşteri Ekle";
+            _btnAdd.Dock = DockStyle.Fill;
+            _btnAdd.BorderRadius = 10;
+            _btnAdd.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            _btnAdd.FillColor = AccentGrn; _btnAdd.ForeColor = Color.White;
+            _btnAdd.HoverState.FillColor = ControlPaint.Dark(AccentGrn, 0.1f);
             _btnAdd.Click += (_, __) => AddCustomer();
 
-            var sep = new Label { Text = "Tahsilat", AutoSize = true, Font = new Font(FontFamily.GenericSansSerif, 10, FontStyle.Bold), Location = new Point(12, 270) };
+            // Ayraç
+            var pnlSep = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
 
-            _cmbCustomer.Location = new Point(12, 300);
-            _cmbCustomer.Width = 380;
+            // Başlık 2
+            var lblSec2 = new Label
+            {
+                Text = "💰  Tahsilat İşlemi",
+                ForeColor = AccentBlu,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            // Müşteri seçimi
+            _cmbCustomer.Dock = DockStyle.Fill; _cmbCustomer.Height = 42;
             _cmbCustomer.DropDownStyle = ComboBoxStyle.DropDownList;
+            _cmbCustomer.BorderRadius = 8; _cmbCustomer.FillColor = BgInput;
+            _cmbCustomer.BorderColor = AccentBlu; _cmbCustomer.ForeColor = TextMain;
+            _cmbCustomer.Font = new Font("Segoe UI", 10);
+            _cmbCustomer.Margin = new Padding(0, 0, 0, 10);
 
-            _cmbMethod.Location = new Point(12, 335);
-            _cmbMethod.Width = 180;
+            // Yöntem + Tutar yan yana — FlowLayoutPanel ile
+            var pnlMethodRow = new Panel { Dock = DockStyle.Fill };
+
+            _cmbMethod.Location = new Point(0, 0); _cmbMethod.Width = 150; _cmbMethod.Height = 42;
             _cmbMethod.DropDownStyle = ComboBoxStyle.DropDownList;
+            _cmbMethod.BorderRadius = 8; _cmbMethod.FillColor = BgInput;
+            _cmbMethod.BorderColor = AccentBlu; _cmbMethod.ForeColor = TextMain;
+            _cmbMethod.Font = new Font("Segoe UI", 10);
             _cmbMethod.Items.AddRange(new object[] { "Cash", "Card" });
             _cmbMethod.SelectedIndex = 0;
 
-            _txtAmount.Location = new Point(212, 335);
-            _txtAmount.Width = 180;
+            _txtAmount.Location = new Point(165, 0); _txtAmount.Width = 170; _txtAmount.Height = 30;
+            _txtAmount.PlaceholderText = "Tutar (TL)"; _txtAmount.BorderRadius = 8;
+            _txtAmount.FillColor = BgInput; _txtAmount.BorderColor = AccentBlu;
+            _txtAmount.ForeColor = TextMain; _txtAmount.Font = new Font("Segoe UI", 10);
             _txtAmount.Text = "0";
 
-            _btnCollect.Text = "Tahsilat Kaydet";
-            _btnCollect.Location = new Point(12, 370);
-            _btnCollect.Size = new Size(380, 32);
-            _btnCollect.Click += (_, __) => Collect();
+            pnlMethodRow.Controls.Add(_cmbMethod);
+            pnlMethodRow.Controls.Add(_txtAmount);
 
-            left.Controls.Add(lblAdd);
-            left.Controls.Add(lblName);
-            left.Controls.Add(_txtName);
-            left.Controls.Add(lblPhone);
-            left.Controls.Add(_txtPhone);
-            left.Controls.Add(lblEmail);
-            left.Controls.Add(_txtEmail);
-            left.Controls.Add(_btnAdd);
-            left.Controls.Add(sep);
-            left.Controls.Add(_cmbCustomer);
-            left.Controls.Add(_cmbMethod);
-            left.Controls.Add(_txtAmount);
-            left.Controls.Add(_btnCollect);
+            // Tahsilat butonu
+            _btnCollect.Text = "✓  Tahsilatı Kaydet";
+            _btnCollect.Dock = DockStyle.Fill;
+            _btnCollect.BorderRadius = 10;
+            _btnCollect.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            _btnCollect.FillColor = AccentBlu; _btnCollect.ForeColor = Color.White;
+            _btnCollect.HoverState.FillColor = ControlPaint.Dark(AccentBlu, 0.1f);
+            _btnCollect.Click += (_, __) => AddCollection();
+
+            // tlp'ye sırayla ekle
+            tlp.Controls.Add(lblSec1, 0, 0);
+            tlp.Controls.Add(_txtName, 0, 1);
+            tlp.Controls.Add(_txtPhone, 0, 2);
+            tlp.Controls.Add(_txtEmail, 0, 3);
+            tlp.Controls.Add(_btnAdd, 0, 4);
+            tlp.Controls.Add(pnlSep, 0, 5);
+            tlp.Controls.Add(lblSec2, 0, 6);
+            tlp.Controls.Add(_cmbCustomer, 0, 7);
+            tlp.Controls.Add(pnlMethodRow, 0, 8);
+            tlp.Controls.Add(_btnCollect, 0, 9);
+
+            left.Controls.Add(tlp);
+
+            // ── SAĞ PANEL (Grid) ─────────────────────────────────────────────────
+            var center = new Panel { Dock = DockStyle.Fill, BackColor = BgDark, Padding = new Padding(12) };
 
             _grid.Dock = DockStyle.Fill;
-            _grid.AllowUserToAddRows = false;
-            _grid.ReadOnly = true;
+            _grid.AllowUserToAddRows = false; _grid.ReadOnly = true;
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _grid.AutoGenerateColumns = true;
-            right.Controls.Add(_grid);
+            _grid.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Dark;
+            _grid.ThemeStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(22, 33, 62);
+            _grid.ThemeStyle.HeaderStyle.ForeColor = Accent;
+            _grid.BorderStyle = BorderStyle.None;
+            _grid.RowHeadersVisible = false;
+            _grid.RowTemplate.Height = 35;
+            _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            _grid.GridColor = Color.FromArgb(40, 55, 90);
+            _grid.ColumnHeadersHeight = 40;
+            _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            _grid.DefaultCellStyle.SelectionForeColor = Color.White;
 
-            Controls.Add(right);
+            center.Controls.Add(_grid);
+
+            Controls.Add(center);
             Controls.Add(left);
 
-            LoadCustomers();
+            LoadData();
         }
 
-        private void LoadCustomers()
+        private void LoadData()
         {
-            _dt = Database.GetCustomers();
-            _grid.DataSource = _dt;
-
-            _cmbCustomer.DataSource = _dt;
-            _cmbCustomer.DisplayMember = "Name";
-            _cmbCustomer.ValueMember = "Id";
+            try
+            {
+                var dt = Database.GetCustomers();
+                _grid.DataSource = dt;
+                _cmbCustomer.DataSource = dt.Copy();
+                _cmbCustomer.DisplayMember = "Name";
+                _cmbCustomer.ValueMember = "Id";
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
         private void AddCustomer()
         {
             var name = _txtName.Text.Trim();
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                MessageBox.Show("Ad soyad zorunludur.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
+            if (string.IsNullOrEmpty(name)) return;
             Database.InsertCustomer(name, _txtPhone.Text.Trim(), _txtEmail.Text.Trim());
-
-            _txtName.Clear();
-            _txtPhone.Clear();
-            _txtEmail.Clear();
-            LoadCustomers();
+            _txtName.Clear(); _txtPhone.Clear(); _txtEmail.Clear();
+            LoadData();
         }
 
-        private static double ParseMoney(string text)
+        private void AddCollection()
         {
-            if (string.IsNullOrWhiteSpace(text)) return 0;
-            if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var v)) return v;
-            if (double.TryParse(text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out v)) return v;
-            return 0;
-        }
-
-        private void Collect()
-        {
-            if (_cmbCustomer.SelectedValue == null)
+            if (_cmbCustomer.SelectedValue == null) return;
+            if (!double.TryParse(_txtAmount.Text, out double amt) || amt <= 0) return;
+            try
             {
-                MessageBox.Show("Müşteri seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                Database.AddCollection((long)_cmbCustomer.SelectedValue, _cmbMethod.Text, amt, Session.UserId ?? 0);
+                _txtAmount.Text = "0";
+                LoadData();
+                MessageBox.Show("Tahsilat kaydedildi.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-
-            var customerId = Convert.ToInt64(_cmbCustomer.SelectedValue);
-            var method = _cmbMethod.SelectedItem?.ToString() ?? "Cash";
-            var amount = Math.Max(0, ParseMoney(_txtAmount.Text));
-            if (amount <= 0)
-            {
-                MessageBox.Show("Tutar zorunludur.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            Database.AddCollection(customerId, method, amount, Session.UserId ?? 0);
-            _txtAmount.Text = "0";
-            LoadCustomers();
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
     }
 }
-

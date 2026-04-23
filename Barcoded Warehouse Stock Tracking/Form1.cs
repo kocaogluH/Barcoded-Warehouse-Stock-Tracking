@@ -57,7 +57,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             if (cmbType.Items.Count > 0)
                 cmbType.SelectedIndex = 0;
 
-            // Events for realtime search, critical stock highlights and navigation buttons
+            // Events
             txtBarcode.TextChanged += TxtBarcode_TextChanged;
             dgvProducts.RowPrePaint += DgvProducts_RowPrePaint;
             btnReports.Click += BtnReports_Click;
@@ -65,7 +65,26 @@ namespace Barcoded_Warehouse_Stock_Tracking
             btnReturns.Click += BtnReturns_Click;
             btnCustomers.Click += BtnCustomers_Click;
 
+            // Global Grid Styling
+            StyleModernGrid(dgvProducts);
+            StyleModernGrid(dgvMovements);
+
             RefreshAll();
+        }
+
+        private void StyleModernGrid(DataGridView g)
+        {
+            g.RowTemplate.Height = 35; // Daha yüksek satırlar (Padding hissi)
+            g.AllowUserToResizeRows = false;
+            g.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            g.GridColor = Color.FromArgb(40, 55, 90);
+            
+            g.ColumnHeadersHeight = 40;
+            g.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10, FontStyle.Bold);
+            g.ColumnHeadersDefaultCellStyle.SelectionBackColor = g.ColumnHeadersDefaultCellStyle.BackColor;
+            
+            g.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            g.DefaultCellStyle.SelectionForeColor = Color.White;
         }
 
         private void SetupRoleAccess()
@@ -79,12 +98,12 @@ namespace Barcoded_Warehouse_Stock_Tracking
 
         private void InitializeDashboardCards()
         {
-            pnlTotalProducts = CreateCard("Toplam Ürün", Color.FromArgb(94, 148, 255), 20, 20, out lblTotalProductsVal);
-            pnlDailySales = CreateCard("Bugünkü Satış", Color.FromArgb(46, 204, 113), 240, 20, out lblDailySalesVal);
-            pnlLowStock = CreateCard("Kritik Stok (<5)", Color.FromArgb(231, 76, 60), 460, 20, out lblLowStockVal);
+            pnlTotalProducts = CreateCard("📦 Toplam Ürün",    System.Drawing.Color.FromArgb(52, 152, 219),   20, 20, out lblTotalProductsVal);
+            pnlDailySales    = CreateCard("💰 Bugünkü Satış",  System.Drawing.Color.FromArgb(46, 204, 113),   240, 20, out lblDailySalesVal);
+            pnlLowStock      = CreateCard("⚠ Kritik Stok (<5)",System.Drawing.Color.FromArgb(233, 69, 96),    460, 20, out lblLowStockVal);
 
-            var dashTab = new TabPage("🏠 Dashboard");
-            dashTab.BackColor = Color.WhiteSmoke;
+            var dashTab = new TabPage("🏠  Dashboard");
+            dashTab.BackColor = System.Drawing.Color.FromArgb(26, 26, 46);
             dashTab.Controls.Add(pnlTotalProducts);
             dashTab.Controls.Add(pnlDailySales);
             dashTab.Controls.Add(pnlLowStock);
@@ -93,15 +112,15 @@ namespace Barcoded_Warehouse_Stock_Tracking
             tabControl.SelectedIndex = 0;
         }
 
-        private Guna2Panel CreateCard(string title, Color bg, int x, int y, out Label valLabel)
+        private Guna.UI2.WinForms.Guna2Panel CreateCard(string title, Color bg, int x, int y, out Label valLabel)
         {
-            var pnl = new Guna2Panel
+            var pnl = new Guna.UI2.WinForms.Guna2Panel
             {
                 Location = new Point(x, y),
-                Size = new Size(200, 100),
-                BorderRadius = 15,
+                Size = new Size(200, 110),
+                BorderRadius = 16,
                 FillColor = bg,
-                ShadowDecoration = { Enabled = true }
+                ShadowDecoration = { Enabled = true, Color = bg, Depth = 10 }
             };
 
             var lblTitle = new Label
@@ -109,8 +128,8 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 Text = title,
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new System.Drawing.Font("Segoe UI", 12, FontStyle.Bold),
-                Location = new Point(15, 15),
+                Font = new System.Drawing.Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(15, 12),
                 AutoSize = true
             };
 
@@ -119,8 +138,8 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 Text = "0",
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new System.Drawing.Font("Segoe UI", 24, FontStyle.Bold),
-                Location = new Point(15, 45),
+                Font = new System.Drawing.Font("Segoe UI", 26, FontStyle.Bold),
+                Location = new Point(15, 48),
                 AutoSize = true
             };
 
@@ -194,17 +213,18 @@ namespace Barcoded_Warehouse_Stock_Tracking
         {
             if (dgvProducts.Rows[e.RowIndex].Cells["Stok"].Value != null)
             {
-                 int stock = Convert.ToInt32(dgvProducts.Rows[e.RowIndex].Cells["Stok"].Value);
-                 if (stock < 5)
-                 {
-                     dgvProducts.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightCoral;
-                     dgvProducts.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.White;
-                 }
-                 else
-                 {
-                     dgvProducts.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.White;
-                     dgvProducts.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.Black;
-                 }
+                int stock = Convert.ToInt32(dgvProducts.Rows[e.RowIndex].Cells["Stok"].Value);
+                if (stock < 5)
+                {
+                    dgvProducts.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.FromArgb(233, 69, 96);
+                    dgvProducts.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.White;
+                    dgvProducts.Rows[e.RowIndex].DefaultCellStyle.SelectionBackColor = Color.FromArgb(200, 50, 75);
+                }
+                else
+                {
+                    dgvProducts.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.FromArgb(22, 33, 62);
+                    dgvProducts.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.FromArgb(234, 234, 234);
+                }
             }
         }
 
@@ -390,38 +410,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 MessageBox.Show("Bu işlem için yetkiniz yok.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
-            try
-            {
-                var doc = new Document();
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Stok_Raporu_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".pdf");
-                PdfWriter.GetInstance(doc, new FileStream(path, FileMode.Create));
-                doc.Open();
-
-                var titleFont = FontFactory.GetFont("Arial", 16, iTextSharp.text.Font.BOLD);
-                var contentFont = FontFactory.GetFont("Arial", 11, iTextSharp.text.Font.NORMAL);
-
-                doc.Add(new Paragraph("Depo Stok Raporu - " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"), titleFont));
-                doc.Add(new Paragraph("---------------------------------------------------------------------------------------------------------"));
-                doc.Add(new Paragraph("\n"));
-
-                var products = _productService.GetAllActiveProducts();
-                foreach (var p in products)
-                {
-                    string info = string.Format("Barkod: {0,-15} | Miktar: {1,-5} | Fiyat: {2,-8} TL | Ürün: {3}", p.Barcode, p.StockQty, p.UnitPrice, p.Name);
-                    doc.Add(new Paragraph(info, contentFont));
-                }
-                
-                doc.Add(new Paragraph("\n"));
-                doc.Add(new Paragraph("Toplam Listelenen Ürün Tipi: " + products.Count, titleFont));
-                
-                doc.Close();
-                MessageBox.Show("Rapor başarıyla masaüstüne PDF olarak kaydedildi!\n" + path, "Rapor Alındı", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show("Rapor oluşturulurken hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            new FrmReports().ShowDialog();
         }
     }
 }
