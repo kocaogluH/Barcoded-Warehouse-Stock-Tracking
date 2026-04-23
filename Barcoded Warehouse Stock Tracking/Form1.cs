@@ -242,9 +242,17 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 .Select(p => new { No = p.Id, Barkod = p.Barcode, Urun = p.Name, Fiyat = p.UnitPrice, Stok = p.StockQty })
                 .ToList();
             
-            dgvMovements.DataSource = _context.StockMovements.OrderByDescending(m => m.CreatedAt)
-                .Select(m => new { Barkod = m.BarcodeSnapshot, İslemTipi = m.Type, Miktar = m.Quantity, Neden = m.Reason, Tarih = m.CreatedAt })
+            dgvMovements.DataSource = _context.StockMovements
+                .OrderByDescending(m => m.Id)
                 .Take(100)
+                .Select(m => new
+                {
+                    Barkod     = m.BarcodeSnapshot,
+                    İşlemTipi  = m.Type,
+                    Miktar     = m.Quantity,
+                    Neden      = m.Reason,
+                    Tarih      = m.CreatedAt
+                })
                 .ToList();
 
             // Sütun genişliklerinin tüm boşlukları kaplayacak şekilde esnemesi
@@ -348,7 +356,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
 
             int qty = (int)nudQuantity.Value;
             string type = cmbType.SelectedItem?.ToString() ?? "Giriş";
-            
+
             if (type == "Çıkış")
             {
                 if (prod.StockQty < qty)
@@ -364,15 +372,20 @@ namespace Barcoded_Warehouse_Stock_Tracking
             }
 
             _productService.UpdateProduct(prod);
-            
-            _context.StockMovements.Add(new StockMovement {
-                ProductId = prod.Id,
-                BarcodeSnapshot = barcode,
-                Quantity = qty,
-                Type = type,
-                Reason = "Manuel Giriş",
-                RefType = "Manual",
-                CreatedByUserId = Session.UserId
+
+            // Çıkış hareketlerinde miktar negatif saklanır (POS satışlarıyla tutarlı)
+            int storedQty = (type == "Çıkış") ? -qty : qty;
+
+            _context.StockMovements.Add(new StockMovement
+            {
+                ProductId        = prod.Id,
+                BarcodeSnapshot  = barcode,
+                Quantity         = storedQty,
+                Type             = type,
+                Reason           = "Manuel " + type,
+                RefType          = "Manual",
+                CreatedAt        = DateTime.Now,
+                CreatedByUserId  = Session.UserId
             });
             _context.SaveChanges();
 

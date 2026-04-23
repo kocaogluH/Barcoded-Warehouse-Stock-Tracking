@@ -19,18 +19,79 @@ namespace Barcoded_Warehouse_Stock_Tracking
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
-            ClientSize = new Size(460, 620);
+            ClientSize = new Size(460, 700);
             BackColor = Color.FromArgb(26, 26, 46);
+
+            // --- Logo (Dairesel) ---
+            int logoSize = 130;
+            var pbLogo = new PictureBox
+            {
+                Size = new Size(logoSize, logoSize),
+                Location = new Point((460 - logoSize) / 2, 16),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent
+            };
+
+            // Dairesel Region maskesi
+            var circlePath = new System.Drawing.Drawing2D.GraphicsPath();
+            circlePath.AddEllipse(0, 0, logoSize, logoSize);
+            pbLogo.Region = new Region(circlePath);
+
+            // Cover modu: logo daire çerçevesini tamamen doldurur, boşluk kalmaz
+            pbLogo.Paint += (s, pe) =>
+            {
+                if (pbLogo.Image == null) return;
+                pe.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                pe.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                using (var path = new System.Drawing.Drawing2D.GraphicsPath())
+                {
+                    path.AddEllipse(0, 0, pbLogo.Width - 1, pbLogo.Height - 1);
+                    pe.Graphics.SetClip(path);
+                    var img = pbLogo.Image;
+                    // Cover: daire tamamen dolar, kenarlar kırpılabilir
+                    float scale = Math.Max((float)pbLogo.Width / img.Width, (float)pbLogo.Height / img.Height);
+                    float drawW = img.Width * scale;
+                    float drawH = img.Height * scale;
+                    float drawX = (pbLogo.Width - drawW) / 2f;
+                    float drawY = (pbLogo.Height - drawH) / 2f;
+                    pe.Graphics.DrawImage(img, drawX, drawY, drawW, drawH);
+                }
+            };
+
+            try
+            {
+                string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
+                string[] logoPaths = new[]
+                {
+                    // 1. Proje Resources klasörü
+                    System.IO.Path.Combine(exeDir, "Resources", "poseidon_logo.png"),
+                    System.IO.Path.Combine(exeDir, "poseidon_logo.png"),
+                    // 2. Şeffaf arka planlı üretilmiş amblem (en temiz görünüm)
+                    @"C:\Users\Halil Kocaoğlu\.gemini\antigravity\brain\24d4abda-eeb1-454e-b8a7-49b150518e71\poseidon_emblem_clean_1776967179886.png",
+                    // 3. Orijinal logo (arka planlı)
+                    @"C:\Users\Halil Kocaoğlu\OneDrive\Masaüstü\iş\Poseidon Otomasyon&Yazılım\Logo-2-.png"
+                };
+                foreach (var path in logoPaths)
+                {
+                    if (System.IO.File.Exists(path))
+                    {
+                        pbLogo.Image = System.Drawing.Image.FromFile(path);
+                        break;
+                    }
+                }
+            }
+            catch { }
+
 
             // --- Başlık Grubu ---
             var lblBrand = new Label
             {
                 Text = "Poseidon Yazılım",
                 ForeColor = Color.FromArgb(233, 69, 96),
-                Font = new Font("Segoe UI", 24, FontStyle.Bold),
+                Font = new Font("Segoe UI", 22, FontStyle.Bold),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(460, 50),
-                Location = new Point(0, 40)
+                Size = new Size(460, 44),
+                Location = new Point(0, 148)
             };
 
             var lblSub = new Label
@@ -40,14 +101,14 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 Font = new Font("Segoe UI", 10),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Size = new Size(460, 25),
-                Location = new Point(0, 90)
+                Location = new Point(0, 195)
             };
 
             // --- KART PANELİ (Ana Taşıyıcı) ---
             var card = new Guna2Panel
             {
-                Size = new Size(380, 420),
-                Location = new Point(40, 130),
+                Size = new Size(380, 400),
+                Location = new Point(40, 228),
                 FillColor = Color.FromArgb(22, 33, 62),
                 BorderRadius = 20,
                 ShadowDecoration = {
@@ -121,15 +182,16 @@ namespace Barcoded_Warehouse_Stock_Tracking
             // Sayfa Alt Yazısı
             var lblFooter = new Label
             {
-                Text = "© 2025 Poseidon Yazılım",
+                Text = "© 2026 Poseidon Yazılım — Software & Automation",
                 ForeColor = Color.FromArgb(100, 100, 130),
                 Font = new Font("Segoe UI", 8),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Size = new Size(460, 20),
-                Location = new Point(0, 565)
+                Location = new Point(0, 650)
             };
 
             // Ana Forma Ekle
+            Controls.Add(pbLogo);
             Controls.Add(lblBrand);
             Controls.Add(lblSub);
             Controls.Add(card);
