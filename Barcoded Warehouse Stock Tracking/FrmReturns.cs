@@ -29,6 +29,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             StartPosition = FormStartPosition.CenterScreen;
             Width = 1000; Height = 700;
             BackColor = BgDark;
+            DoubleBuffered = true;
 
             // ── TOP PANEL (Search) ──────────────────────────────────────────────
             var top = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = BgMid, Padding = new Padding(20) };
@@ -67,21 +68,26 @@ namespace Barcoded_Warehouse_Stock_Tracking
             _grid.AllowUserToAddRows = false;
             _grid.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Dark;
             _grid.ThemeStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.GridColor = Color.FromArgb(40, 55, 90);
+
             _grid.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(22, 33, 62);
             _grid.ThemeStyle.HeaderStyle.ForeColor = Accent;
+            _grid.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+
+            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9);
+            _grid.ThemeStyle.RowsStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            _grid.ThemeStyle.RowsStyle.SelectionForeColor = Color.White;
+
             _grid.BorderStyle = BorderStyle.None;
             _grid.RowHeadersVisible = false;
-
-            // --- Modern Styling ---
             _grid.RowTemplate.Height = 35;
-            _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            _grid.GridColor = Color.FromArgb(40, 55, 90);
             _grid.ColumnHeadersHeight = 40;
-            _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
-            _grid.DefaultCellStyle.SelectionForeColor = Color.White;
+            
+            // Ghosting sorununu önlemek için
+            typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(_grid, true, null);
 
             _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Barcode",    HeaderText = "Barkod",     Width = 150, ReadOnly = true });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name",       HeaderText = "Ürün",       AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ReadOnly = true });

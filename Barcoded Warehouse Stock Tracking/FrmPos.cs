@@ -66,6 +66,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             Width = 1100; Height = 680;
             WindowState = FormWindowState.Normal;
             BackColor = BgDark;
+            DoubleBuffered = true;
 
             // ══════════════════════════════════════════════════════════════════════
             // TOP PANEL  (yükseklik artırıldı, tüm elemanlar dikey ortada)
@@ -82,9 +83,9 @@ namespace Barcoded_Warehouse_Stock_Tracking
             // Sol: Başlık — dikey ortalanmış
             var lblTitle = new Label
             {
-                Text = "Hızlı Satış",
+                Text = "Hızlı Satış (F1: Barkod, F5: Nakit, F6: Kart, F10: Temizle)",
                 ForeColor = Accent,
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
                 AutoSize = true
             };
             lblTitle.Location = new Point(25, (TOP_H - lblTitle.PreferredHeight) / 2);
@@ -148,22 +149,28 @@ namespace Barcoded_Warehouse_Stock_Tracking
             // ══════════════════════════════════════════════════════════════════════
             var center = new Panel { Dock = DockStyle.Fill, BackColor = BgDark, Padding = new Padding(12) };
             _grid.Dock = DockStyle.Fill;
-            _grid.AllowUserToAddRows = false;
             _grid.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Dark;
             _grid.ThemeStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.GridColor = Color.FromArgb(40, 55, 90);
+
             _grid.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(22, 33, 62);
             _grid.ThemeStyle.HeaderStyle.ForeColor = Accent;
+            _grid.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+
+            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9);
+            _grid.ThemeStyle.RowsStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            _grid.ThemeStyle.RowsStyle.SelectionForeColor = Color.White;
+
             _grid.BorderStyle = BorderStyle.None;
             _grid.RowHeadersVisible = false;
             _grid.RowTemplate.Height = 35;
-            _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            _grid.GridColor = Color.FromArgb(40, 55, 90);
             _grid.ColumnHeadersHeight = 40;
-            _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
-            _grid.DefaultCellStyle.SelectionForeColor = Color.White;
+            
+            // Ghosting sorununu önlemek için
+            typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(_grid, true, null);
 
             _grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Barkod", DataPropertyName = "BarcodeSnapshot", Width = 150 });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Ürün", DataPropertyName = "NameSnapshot", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
@@ -403,13 +410,20 @@ namespace Barcoded_Warehouse_Stock_Tracking
                     Graphics g = ev.Graphics;
                     Font fTitle = new Font("Courier New", 12, FontStyle.Bold);
                     Font fBody = new Font("Courier New", 9);
+                    Font fSmall = new Font("Courier New", 7);
                     int y = 10;
 
-                    g.DrawString("POSEIDON YAZILIM", fTitle, Brushes.Black, 10, y); y += 20;
+                    // HEADER
+                    g.DrawString("MİYUKİ ATELİER", fTitle, Brushes.Black, 10, y); y += 20;
+                    g.DrawString("Yeni Çağ Mah. Yıldırımtepe Cd.", fSmall, Brushes.Black, 10, y); y += 12;
+                    g.DrawString("Defne / HATAY", fSmall, Brushes.Black, 10, y); y += 12;
+                    g.DrawString("Tel: 0530 626 90 99", fSmall, Brushes.Black, 10, y); y += 18;
+                    
                     g.DrawString("Fiş No: " + saleNo, fBody, Brushes.Black, 10, y); y += 15;
                     g.DrawString(DateTime.Now.ToString("g"), fBody, Brushes.Black, 10, y); y += 20;
                     g.DrawString("-------------------------------", fBody, Brushes.Black, 10, y); y += 15;
 
+                    // ITEMS
                     foreach (var it in items)
                     {
                         g.DrawString(it.NameSnapshot, fBody, Brushes.Black, 10, y); y += 12;
@@ -417,14 +431,65 @@ namespace Barcoded_Warehouse_Stock_Tracking
                                      fBody, Brushes.Black, 20, y); y += 15;
                     }
 
+                    // FOOTER
                     g.DrawString("-------------------------------", fBody, Brushes.Black, 10, y); y += 15;
-                    if (disc > 0) { g.DrawString($"İndirim: {disc:N2} TL", fBody, Brushes.Black, 10, y); y += 15; }
-                    g.DrawString($"TOPLAM : {grand:N2} TL", fTitle, Brushes.Black, 10, y); y += 25;
-                    g.DrawString("Teşekkür Ederiz", fBody, Brushes.Black, 50, y);
+                    if (disc > 0) { g.DrawString($"İndirim  : {disc:N2} TL", fBody, Brushes.Black, 10, y); y += 15; }
+                    g.DrawString($"TOPLAM   : {grand:N2} TL", fTitle, Brushes.Black, 10, y); y += 30;
+                    
+                    g.DrawString("Bizi Tercih Ettiğiniz İçin Teşekkürler", fSmall, Brushes.Black, 10, y); y += 12;
+                    g.DrawString("İyi Günler Dileriz", fSmall, Brushes.Black, 10, y); y += 12;
+                    g.DrawString("www.poseidonyazilim.com", fSmall, Brushes.Black, 10, y);
                 };
                 pd.Print();
             }
             catch (Exception ex) { MessageBox.Show("Yazıcı hatası: " + ex.Message); }
+        }
+        private double GetGrandTotal()
+        {
+            double total = 0;
+            foreach (var it in _cartItems) total += it.Quantity * it.UnitPrice;
+            double.TryParse(_txtDiscount.Text, out double disc);
+            return total - disc;
+        }
+
+        private void RemoveSelectedItem()
+        {
+            if (_grid.CurrentRow == null) return;
+            var index = _grid.CurrentRow.Index;
+            if (index >= 0 && index < _cartItems.Count)
+            {
+                _cartItems.RemoveAt(index);
+                RefreshGrid();
+            }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.F1) { _txtBarcode.Focus(); return true; }
+            if (keyData == Keys.F5) 
+            { 
+                _txtCard.Text = "0";
+                _txtCash.Text = GetGrandTotal().ToString(); 
+                CompleteSale(); 
+                return true; 
+            }
+            if (keyData == Keys.F6) 
+            { 
+                _txtCash.Text = "0";
+                _txtCard.Text = GetGrandTotal().ToString(); 
+                CompleteSale(); 
+                return true; 
+            }
+            if (keyData == Keys.F10) 
+            { 
+                if (MessageBox.Show("Sepeti temizlemek istiyor musunuz?", "Onay", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    _cartItems.Clear(); RefreshGrid(); 
+                }
+                return true; 
+            }
+            if (keyData == Keys.Delete) { RemoveSelectedItem(); return true; }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

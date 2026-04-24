@@ -9,6 +9,8 @@ using Guna.UI2.WinForms;
 using Barcoded_Warehouse_Stock_Tracking.Business;
 using Barcoded_Warehouse_Stock_Tracking.DataAccess;
 using Barcoded_Warehouse_Stock_Tracking.Entities;
+using System.Windows.Forms.DataVisualization.Charting;
+using System.Data;
 
 namespace Barcoded_Warehouse_Stock_Tracking
 {
@@ -27,6 +29,11 @@ namespace Barcoded_Warehouse_Stock_Tracking
 
         private Guna2Panel pnlLowStock;
         private Label lblLowStockVal;
+
+        private Guna2Panel pnlPendingBalance;
+        private Label lblPendingBalanceVal;
+
+        private Chart chartTopSellers;
 
         public Form1()
         {
@@ -69,6 +76,44 @@ namespace Barcoded_Warehouse_Stock_Tracking
             StyleModernGrid(dgvProducts);
             StyleModernGrid(dgvMovements);
 
+            // Yeni merkezi silme butonu
+            var btnDeleteProduct = new Guna2Button
+            {
+                Text = "🗑  Ürünü Sil",
+                Location = new Point(830, 18),
+                Size = new Size(200, 38),
+                BorderRadius = 8,
+                FillColor = Color.FromArgb(233, 69, 96),
+                Font = new System.Drawing.Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                HoverState = { FillColor = Color.FromArgb(200, 50, 75) }
+            };
+            btnDeleteProduct.Click += (s, ev) =>
+            {
+                if (dgvProducts.CurrentRow == null) return;
+                if (!Session.IsAdmin)
+                {
+                    MessageBox.Show("Bu işlem için yönetici yetkisi gereklidir.", "Yetki Hatası", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var row = dgvProducts.CurrentRow;
+                var barcode = row.Cells["Barkod"].Value.ToString();
+                var name = row.Cells["Urun"].Value.ToString();
+
+                if (MessageBox.Show($"'{name}' isimli ürünü silmek istediğinize emin misiniz?", "Ürün Sil", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    var product = _productService.GetProductByBarcode(barcode);
+                    if (product != null)
+                    {
+                        _productService.DeleteProduct(product.Id);
+                        RefreshAll();
+                    }
+                }
+            };
+            tabProducts.Controls.Add(btnDeleteProduct);
+
             RefreshAll();
         }
 
@@ -98,15 +143,46 @@ namespace Barcoded_Warehouse_Stock_Tracking
 
         private void InitializeDashboardCards()
         {
-            pnlTotalProducts = CreateCard("📦 Toplam Ürün",    System.Drawing.Color.FromArgb(52, 152, 219),   20, 20, out lblTotalProductsVal);
-            pnlDailySales    = CreateCard("💰 Bugünkü Satış",  System.Drawing.Color.FromArgb(46, 204, 113),   240, 20, out lblDailySalesVal);
-            pnlLowStock      = CreateCard("⚠ Kritik Stok (<5)",System.Drawing.Color.FromArgb(233, 69, 96),    460, 20, out lblLowStockVal);
+            pnlTotalProducts  = CreateCard("📦 Toplam Ürün",    System.Drawing.Color.FromArgb(52, 152, 219),   20, 20, out lblTotalProductsVal);
+            pnlDailySales     = CreateCard("💰 Bugünkü Satış",  System.Drawing.Color.FromArgb(46, 204, 113),   240, 20, out lblDailySalesVal);
+            pnlLowStock       = CreateCard("⚠ Kritik Stok (<5)",System.Drawing.Color.FromArgb(233, 69, 96),    460, 20, out lblLowStockVal);
+            pnlPendingBalance = CreateCard("📋 Toplam Alacak",   System.Drawing.Color.FromArgb(230, 126, 34),   680, 20, out lblPendingBalanceVal);
+
+            // ── TOP SELLERS CHART ────────────────────────────────────────────────
+            chartTopSellers = new Chart
+            {
+                Location = new Point(20, 150),
+                Size = new Size(860, 360),
+                BackColor = System.Drawing.Color.FromArgb(26, 26, 46)
+            };
+
+            var area = new ChartArea("MainArea") { BackColor = Color.Transparent };
+            area.AxisX.LabelStyle.ForeColor = Color.White;
+            area.AxisY.LabelStyle.ForeColor = Color.White;
+            area.AxisX.MajorGrid.LineColor = Color.FromArgb(40, 55, 90);
+            area.AxisY.MajorGrid.LineColor = Color.FromArgb(40, 55, 90);
+            chartTopSellers.ChartAreas.Add(area);
+
+            var series = new Series("Sales")
+            {
+                ChartType = SeriesChartType.Column,
+                IsValueShownAsLabel = true,
+                LabelForeColor = Color.White,
+                Font = new System.Drawing.Font("Segoe UI", 9, FontStyle.Bold),
+                Palette = ChartColorPalette.Pastel
+            };
+            chartTopSellers.Series.Add(series);
+
+            var title = new Title("🔥 En Çok Satan 5 Ürün", Docking.Top, new System.Drawing.Font("Segoe UI", 14, FontStyle.Bold), Color.FromArgb(233, 69, 96));
+            chartTopSellers.Titles.Add(title);
 
             var dashTab = new TabPage("🏠  Dashboard");
             dashTab.BackColor = System.Drawing.Color.FromArgb(26, 26, 46);
             dashTab.Controls.Add(pnlTotalProducts);
             dashTab.Controls.Add(pnlDailySales);
             dashTab.Controls.Add(pnlLowStock);
+            dashTab.Controls.Add(pnlPendingBalance);
+            dashTab.Controls.Add(chartTopSellers);
 
             tabControl.TabPages.Insert(0, dashTab);
             tabControl.SelectedIndex = 0;
@@ -262,6 +338,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             // Kart güncellemesi
             if (lblTotalProductsVal != null) lblTotalProductsVal.Text = _dashboardService.GetTotalActiveProducts().ToString();
             if (lblDailySalesVal != null) lblDailySalesVal.Text = _dashboardService.GetTodaySalesTotal().ToString("C2");
+            if (lblPendingBalanceVal != null) lblPendingBalanceVal.Text = _dashboardService.GetTotalPendingBalance().ToString("C2");
             
             if (lblLowStockVal != null) 
             {
@@ -278,6 +355,18 @@ namespace Barcoded_Warehouse_Stock_Tracking
                 {
                     lblLowStockVal.Text = "0";
                     lblLowStockVal.Font = new System.Drawing.Font("Segoe UI", 24, FontStyle.Bold);
+                }
+            }
+
+            // Grafik Güncellemesi
+            if (chartTopSellers != null)
+            {
+                var dt = _dashboardService.GetTopSellingProducts(5);
+                chartTopSellers.Series["Sales"].Points.Clear();
+                foreach (DataRow row in dt.Rows)
+                {
+                    int index = chartTopSellers.Series["Sales"].Points.AddXY(row["Name"], row["TotalQty"]);
+                    chartTopSellers.Series["Sales"].Points[index].Color = Color.FromArgb(52, 152, 219); // Accent Blue
                 }
             }
         }

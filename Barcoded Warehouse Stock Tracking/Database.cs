@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS Customers (
   Phone TEXT NULL,
   Email TEXT NULL,
   Balance REAL NOT NULL DEFAULT 0,
+  IsActive INTEGER NOT NULL DEFAULT 1,
   CreatedAt TEXT NOT NULL
 );
 
@@ -167,6 +168,17 @@ CREATE TABLE IF NOT EXISTS SaleReturnItems (
 ";
                     cmd.ExecuteNonQuery();
                 }
+
+                // migration: add IsActive to Customers if missing
+                try
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "ALTER TABLE Customers ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                catch { /* already exists or error */ }
 
                 using (var cmd = conn.CreateCommand())
                 {
@@ -570,6 +582,30 @@ VALUES(@pid, @b, @q, 'Çıkış', 'Sale', 'Sale', @rid, @dt, @uid);";
             }
         }
 
+        public static void DeleteCustomer(long id)
+        {
+            using (var conn = GetConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "UPDATE Customers SET IsActive = 0 WHERE Id = @id";
+                cmd.Parameters.AddWithValue("@id", id);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public static void DeleteProduct(string barcode)
+        {
+            using (var conn = GetConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "UPDATE Products SET IsActive = 0 WHERE Barcode = @b";
+                cmd.Parameters.AddWithValue("@b", barcode);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         public static long InsertCustomer(string name, string phone, string email)
         {
             using (var conn = GetConnection())
@@ -893,7 +929,42 @@ ORDER BY StockQty ASC, Name;";
             using (var cmd = conn.CreateCommand())
             {
                 conn.Open();
-                cmd.CommandText = "SELECT Name, Phone, Email, Balance FROM Customers ORDER BY Balance DESC, Name";
+                cmd.CommandText = "SELECT Name, Phone, Email, Balance FROM Customers WHERE IsActive = 1 ORDER BY Balance DESC, Name";
+                using (var da = new SQLiteDataAdapter(cmd))
+                {
+                    var dt = new DataTable();
+                    da.Fill(dt);
+                    return dt;
+                }
+            }
+        }
+
+        public static double GetTotalPendingBalance()
+        {
+            using (var conn = GetConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT SUM(Balance) FROM Customers WHERE IsActive = 1";
+                conn.Open();
+                var result = cmd.ExecuteScalar();
+                return result == DBNull.Value ? 0 : Convert.ToDouble(result);
+            }
+        }
+
+        public static DataTable GetTopSellingProducts(int limit)
+        {
+            using (var conn = GetConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+SELECT p.Name, SUM(si.Quantity) as TotalQty 
+FROM SaleItems si
+JOIN Products p ON si.ProductId = p.Id
+GROUP BY p.Id, p.Name
+ORDER BY TotalQty DESC
+LIMIT @limit";
+                cmd.Parameters.AddWithValue("@limit", limit);
+                conn.Open();
                 using (var da = new SQLiteDataAdapter(cmd))
                 {
                     var dt = new DataTable();

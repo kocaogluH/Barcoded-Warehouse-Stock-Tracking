@@ -48,6 +48,7 @@ namespace Barcoded_Warehouse_Stock_Tracking
             StartPosition = FormStartPosition.CenterScreen;
             Width = 1020; Height = 620;
             BackColor = BgDark;
+            DoubleBuffered = true;
 
             // ── SOL PANEL ────────────────────────────────────────────────────────
             var left = new Panel
@@ -148,6 +149,32 @@ namespace Barcoded_Warehouse_Stock_Tracking
             _btnCollect.HoverState.FillColor = ControlPaint.Dark(AccentBlu, 0.1f);
             _btnCollect.Click += (_, __) => AddCollection();
 
+            // Müşteri Silme butonu
+            var btnDeleteCustomer = new Guna2Button
+            {
+                Text = "🗑  Müşteriyi Sil",
+                Dock = DockStyle.Fill,
+                BorderRadius = 10,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                FillColor = Color.FromArgb(233, 69, 96),
+                ForeColor = Color.White,
+                Margin = new Padding(0, 10, 0, 0)
+            };
+            btnDeleteCustomer.Click += (s, e) =>
+            {
+                if (_grid.CurrentRow == null) return;
+                var row = ((DataRowView)_grid.CurrentRow.DataBoundItem).Row;
+                long id = Convert.ToInt64(row["Id"]);
+                string name = row["Name"].ToString();
+
+                if (MessageBox.Show($"'{name}' isimli müşteriyi silmek istediğinize emin misiniz?", "Müşteri Sil",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    Database.DeleteCustomer(id);
+                    LoadData();
+                }
+            };
+
             // tlp'ye sırayla ekle
             tlp.Controls.Add(lblSec1, 0, 0);
             tlp.Controls.Add(_txtName, 0, 1);
@@ -159,6 +186,8 @@ namespace Barcoded_Warehouse_Stock_Tracking
             tlp.Controls.Add(_cmbCustomer, 0, 7);
             tlp.Controls.Add(pnlMethodRow, 0, 8);
             tlp.Controls.Add(_btnCollect, 0, 9);
+            tlp.Controls.Add(new Panel(), 0, 10); // Boşluk
+            tlp.Controls.Add(btnDeleteCustomer, 0, 11);
 
             left.Controls.Add(tlp);
 
@@ -170,19 +199,28 @@ namespace Barcoded_Warehouse_Stock_Tracking
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             _grid.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Dark;
             _grid.ThemeStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
-            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.GridColor = Color.FromArgb(40, 55, 90);
+            
             _grid.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(22, 33, 62);
             _grid.ThemeStyle.HeaderStyle.ForeColor = Accent;
+            _grid.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            
+            _grid.ThemeStyle.RowsStyle.BackColor = BgMid;
+            _grid.ThemeStyle.RowsStyle.ForeColor = TextMain;
+            _grid.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9);
+            _grid.ThemeStyle.RowsStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
+            _grid.ThemeStyle.RowsStyle.SelectionForeColor = Color.White;
+
             _grid.BorderStyle = BorderStyle.None;
             _grid.RowHeadersVisible = false;
             _grid.RowTemplate.Height = 35;
-            _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            _grid.GridColor = Color.FromArgb(40, 55, 90);
             _grid.ColumnHeadersHeight = 40;
-            _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(60, 80, 140);
-            _grid.DefaultCellStyle.SelectionForeColor = Color.White;
+            _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+            // Ghosting sorununu önlemek için
+            // Ghosting sorununu önlemek için
+            typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(_grid, true, null);
 
             center.Controls.Add(_grid);
 
@@ -198,6 +236,16 @@ namespace Barcoded_Warehouse_Stock_Tracking
             {
                 var dt = Database.GetCustomers();
                 _grid.DataSource = dt;
+                
+                // Başlıkları Türkçeleştir
+                if (_grid.Columns.Count > 0)
+                {
+                    if (_grid.Columns["Name"] != null) _grid.Columns["Name"].HeaderText = "Müşteri Adı";
+                    if (_grid.Columns["Phone"] != null) _grid.Columns["Phone"].HeaderText = "Telefon";
+                    if (_grid.Columns["Email"] != null) _grid.Columns["Email"].HeaderText = "E-Posta";
+                    if (_grid.Columns["Balance"] != null) _grid.Columns["Balance"].HeaderText = "Bakiye";
+                }
+
                 _cmbCustomer.DataSource = dt.Copy();
                 _cmbCustomer.DisplayMember = "Name";
                 _cmbCustomer.ValueMember = "Id";

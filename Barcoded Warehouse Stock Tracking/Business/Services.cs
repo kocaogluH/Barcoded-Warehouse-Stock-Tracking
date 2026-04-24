@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barcoded_Warehouse_Stock_Tracking.Entities;
 using Barcoded_Warehouse_Stock_Tracking.DataAccess;
+using System.Data;
 
 namespace Barcoded_Warehouse_Stock_Tracking.Business
 {
@@ -75,6 +76,16 @@ namespace Barcoded_Warehouse_Stock_Tracking.Business
             var today = DateTime.Today;
             var sales = _context.Sales.Where(s => s.Status == "Completed" && s.CreatedAt >= today).ToList();
             return sales.Sum(s => s.GrandTotal);
+        }
+
+        public double GetTotalPendingBalance()
+        {
+            return Database.GetTotalPendingBalance();
+        }
+
+        public DataTable GetTopSellingProducts(int limit = 5)
+        {
+            return Database.GetTopSellingProducts(limit);
         }
     }
 

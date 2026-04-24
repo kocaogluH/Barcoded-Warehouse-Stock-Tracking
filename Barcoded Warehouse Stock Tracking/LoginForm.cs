@@ -61,16 +61,20 @@ namespace Barcoded_Warehouse_Stock_Tracking
             try
             {
                 string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
+                string projectDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(exeDir, "..", ".."));
+                
                 string[] logoPaths = new[]
                 {
-                    // 1. Proje Resources klasörü
+                    // 1. Proje Resources klasörü (Geliştirme aşaması için)
+                    System.IO.Path.Combine(projectDir, "Resources", "poseidon_logo.png"),
+                    // 2. Bin/Resources klasörü (Derlenmiş uygulama için)
                     System.IO.Path.Combine(exeDir, "Resources", "poseidon_logo.png"),
+                    // 3. Mevcut dizin
                     System.IO.Path.Combine(exeDir, "poseidon_logo.png"),
-                    // 2. Şeffaf arka planlı üretilmiş amblem (en temiz görünüm)
-                    @"C:\Users\Halil Kocaoğlu\.gemini\antigravity\brain\24d4abda-eeb1-454e-b8a7-49b150518e71\poseidon_emblem_clean_1776967179886.png",
-                    // 3. Orijinal logo (arka planlı)
-                    @"C:\Users\Halil Kocaoğlu\OneDrive\Masaüstü\iş\Poseidon Otomasyon&Yazılım\Logo-2-.png"
+                    // 4. Kullanıcının belirttiği orijinal yol (Yedek olarak)
+                    @"C:\Users\Halil Kocaoğlu\OneDrive\Masaüstü\iş\Poseidon Otomasyon&Yazılım\Logo-2--removebg-preview.png"
                 };
+
                 foreach (var path in logoPaths)
                 {
                     if (System.IO.File.Exists(path))
